@@ -165,6 +165,7 @@ def install_gptsovits_deps(gptsovits_dir):
             'phonemizer>=3.2.1',
             'pyyaml>=6.0',
             'tqdm>=4.66.0',
+            'pytorch-lightning>=2.0.0',  # Required for training
         ]
         for dep in common_deps:
             try:
@@ -181,11 +182,12 @@ def install_gptsovits_deps(gptsovits_dir):
                     print(f"WARNING: Failed to install {dep}")
     else:
         try:
+            print(f"Installing from {requirements_file}...")
+            print("This may take several minutes...")
             result = subprocess.run(
                 [sys.executable, '-m', 'pip', 'install', '-r', str(requirements_file)],
                 check=True,
-                capture_output=True,
-                text=True
+                capture_output=False  # Show output so user can see progress
             )
             print("✓ GPT-SoVITS dependencies installed")
         except subprocess.CalledProcessError as e:
@@ -196,6 +198,27 @@ def install_gptsovits_deps(gptsovits_dir):
             else:
                 print(f"WARNING: Some dependencies may have failed: {error_msg}")
                 print("You may need to install them manually")
+                print("\nTrying to install critical dependencies individually...")
+                # Install critical dependencies that might have failed
+                critical_deps = [
+                    'pytorch-lightning>=2.4',
+                    'transformers>=4.43,<=4.50',
+                    'gradio<5',
+                    'tensorboard',
+                ]
+                for dep in critical_deps:
+                    try:
+                        print(f"Installing {dep}...")
+                        subprocess.run(
+                            [sys.executable, '-m', 'pip', 'install', dep],
+                            check=True,
+                            capture_output=False
+                        )
+                        print(f"✓ Installed {dep}")
+                    except Exception as install_error:
+                        print(f"⚠ Failed to install {dep}: {install_error}")
+                print("\nYou may need to install remaining dependencies manually:")
+                print(f"  pip install -r {requirements_file}")
 
 
 def verify_installation():
