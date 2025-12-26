@@ -1,4 +1,4 @@
-"""Text-to-speech using voice cloning (RVC + Base TTS) - mandatory, no fallback."""
+"""Text-to-speech using GPT-SoVITS voice cloning - mandatory, no fallback."""
 
 import threading
 import queue
@@ -42,16 +42,16 @@ class TextToSpeech:
             self.voice_cloning = VoiceCloning()
             if not self.voice_cloning.is_available():
                 print("ERROR: Voice cloning initialized but not available")
-                print("Check that RVC model exists and base TTS is installed")
+                print("Check that GPT-SoVITS models exist and are properly configured")
                 print("Install dependencies: pip install -r requirements-windows.txt")
-                print("Train RVC model: See RVC_SETUP.md for instructions")
+                print("Train model: See GPTSOVITS_SETUP.md for instructions")
                 sys.exit(1)
             
-            print("Voice cloning initialized successfully with TARS voice sample")
+            print("Voice cloning initialized successfully with GPT-SoVITS")
         except ImportError:
-            print("ERROR: RVC or base TTS not installed")
+            print("ERROR: GPT-SoVITS dependencies not installed")
             print("Install with: pip install -r requirements-windows.txt")
-            print("Required: torch, torchaudio, librosa, soundfile, faiss-cpu, edge-tts")
+            print("Required: torch, torchaudio, librosa, soundfile, onnxruntime")
             sys.exit(1)
         except Exception as e:
             print(f"ERROR: Failed to initialize voice cloning: {e}")

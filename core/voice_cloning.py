@@ -1,70 +1,60 @@
-"""Voice cloning using RVC (Retrieval-based Voice Conversion) for TARS voice."""
+"""Voice cloning using GPT-SoVITS for TARS voice."""
 
 import os
 import sys
-import tempfile
 from pathlib import Path
 from typing import Optional
-from config.settings import MODELS_DIR, AUDIO_CACHE_DIR, RVC_MODEL_PATH, BASE_TTS_ENGINE
+from config.settings import GPTSOVITS_MODEL_DIR, GPTSOVITS_USE_ONNX, GPTSOVITS_QUANTIZED
 
 
 class VoiceCloning:
-    """Voice cloning engine using RVC + base TTS."""
+    """Voice cloning engine using GPT-SoVITS."""
     
-    def __init__(self, rvc_model_path: Optional[str] = None, base_tts_engine: Optional[str] = None):
+    def __init__(self, model_dir: Optional[str] = None, use_onnx: Optional[bool] = None, quantized: Optional[bool] = None):
         """
         Initialize voice cloning engine.
         
         Args:
-            rvc_model_path: Path to RVC model file (.pth)
-            base_tts_engine: Base TTS engine to use ('edge-tts', 'gtts', or 'pyttsx3')
+            model_dir: Directory containing GPT-SoVITS model files
+            use_onnx: Use ONNX models (default: from config)
+            quantized: Use quantized INT8 models (default: from config)
         """
-        self.rvc_model_path = rvc_model_path or RVC_MODEL_PATH
-        self.base_tts_engine = base_tts_engine or BASE_TTS_ENGINE
-        self.rvc = None
-        self.base_tts = None
+        self.tts_engine = None
         self.model_loaded = False
-        self._init_components()
+        self._init_gptsovits(model_dir, use_onnx, quantized)
     
-    def _init_components(self):
-        """Initialize RVC and base TTS components."""
+    def _init_gptsovits(self, model_dir: Optional[str], use_onnx: Optional[bool], quantized: Optional[bool]):
+        """Initialize GPT-SoVITS TTS engine."""
         try:
-            from core.rvc_cloning import RVCCloning
-            from core.base_tts import BaseTTS
+            from core.gptsovits_tts import GPTSoVITSTTS
             
-            # Initialize base TTS
-            print(f"Initializing base TTS: {self.base_tts_engine}")
-            self.base_tts = BaseTTS(self.base_tts_engine)
-            if not self.base_tts.is_available():
-                print("ERROR: Base TTS not available")
-                sys.exit(1)
+            print("Initializing GPT-SoVITS voice cloning...")
+            self.tts_engine = GPTSoVITSTTS(model_dir, use_onnx, quantized)
             
-            # Initialize RVC model
-            print(f"Loading RVC model: {self.rvc_model_path}")
-            self.rvc = RVCCloning(self.rvc_model_path)
-            if not self.rvc.is_available():
-                print("ERROR: RVC model not available")
+            if not self.tts_engine.is_available():
+                print("ERROR: GPT-SoVITS not available")
                 sys.exit(1)
             
             self.model_loaded = True
-            print("Voice cloning initialized successfully!")
+            print("Voice cloning initialized successfully with GPT-SoVITS!")
             
         except ImportError as e:
-            print(f"ERROR: Failed to import required modules: {e}")
+            print(f"ERROR: Failed to import GPT-SoVITS: {e}")
+            print("Install dependencies: pip install -r requirements-windows.txt")
             import traceback
             traceback.print_exc()
             sys.exit(1)
         except Exception as e:
-            print(f"ERROR: Failed to initialize voice cloning: {e}")
+            print(f"ERROR: Failed to initialize GPT-SoVITS: {e}")
             import traceback
             traceback.print_exc()
             sys.exit(1)
     
     def clone_voice(self, text: str, output_path: Optional[str] = None) -> Optional[str]:
         """
-        Generate speech using cloned voice via RVC pipeline.
+        Generate speech using cloned voice via GPT-SoVITS.
         
-        Pipeline: Text -> Base TTS -> RVC Conversion -> TARS Voice
+        Pipeline: Text -> GPT-SoVITS -> TARS Voice
         
         Args:
             text: Text to speak
@@ -73,39 +63,17 @@ class VoiceCloning:
         Returns:
             Path to generated audio file, or None if failed
         """
-        if not self.model_loaded or not self.base_tts or not self.rvc:
+        if not self.model_loaded or not self.tts_engine:
             return None
         
         try:
-            # Generate output path if not provided
-            if not output_path:
-                # Create cache directory if it doesn't exist
-                AUDIO_CACHE_DIR.mkdir(exist_ok=True)
-                # Use hash of text for filename
-                import hashlib
-                text_hash = hashlib.md5(text.encode()).hexdigest()[:8]
-                output_path = str(AUDIO_CACHE_DIR / f"tts_{text_hash}.wav")
+            # Generate speech directly with GPT-SoVITS
+            audio_file = self.tts_engine.synthesize(text, output_path)
             
-            # Step 1: Generate speech with base TTS
-            temp_audio = self.base_tts.synthesize(text)
-            if not temp_audio or not os.path.exists(temp_audio):
-                print("Error: Base TTS failed to generate audio")
-                return None
-            
-            # Step 2: Convert to TARS voice using RVC
-            converted_audio = self.rvc.convert(temp_audio, output_path)
-            
-            # Clean up temporary file
-            if temp_audio != output_path and os.path.exists(temp_audio):
-                try:
-                    os.remove(temp_audio)
-                except:
-                    pass
-            
-            if converted_audio and os.path.exists(converted_audio):
-                return converted_audio
+            if audio_file and os.path.exists(audio_file):
+                return audio_file
             else:
-                print("Error: RVC conversion failed")
+                print("Error: GPT-SoVITS synthesis failed")
                 return None
             
         except Exception as e:
@@ -117,8 +85,6 @@ class VoiceCloning:
     def is_available(self) -> bool:
         """Check if voice cloning is available."""
         return (self.model_loaded and 
-                self.base_tts is not None and 
-                self.rvc is not None and
-                self.base_tts.is_available() and
-                self.rvc.is_available())
+                self.tts_engine is not None and
+                self.tts_engine.is_available())
 

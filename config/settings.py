@@ -41,11 +41,12 @@ VOICE_SAMPLES_DIR = BASE_DIR / 'voice_samples'
 USE_VOICE_CLONING = os.getenv('USE_VOICE_CLONING', 'true').lower() == 'true'
 TARS_VOICE_SAMPLE = os.getenv('TARS_VOICE_SAMPLE', str(VOICE_SAMPLES_DIR / 'tars_sample.wav'))
 
-# RVC settings
-RVC_MODELS_DIR = MODELS_DIR / 'rvc_models'
-RVC_MODELS_DIR.mkdir(exist_ok=True)
-RVC_MODEL_PATH = os.getenv('RVC_MODEL_PATH', str(RVC_MODELS_DIR / 'tars_voice.pth'))
-BASE_TTS_ENGINE = os.getenv('BASE_TTS_ENGINE', 'edge-tts')  # edge-tts, gtts, or pyttsx3
+# GPT-SoVITS settings
+GPTSOVITS_MODELS_DIR = MODELS_DIR / 'gptsovits_models'
+GPTSOVITS_MODELS_DIR.mkdir(exist_ok=True)
+GPTSOVITS_MODEL_DIR = os.getenv('GPTSOVITS_MODEL_DIR', str(GPTSOVITS_MODELS_DIR / 'tars_voice'))
+GPTSOVITS_USE_ONNX = os.getenv('GPTSOVITS_USE_ONNX', 'true').lower() == 'true'
+GPTSOVITS_QUANTIZED = os.getenv('GPTSOVITS_QUANTIZED', 'false').lower() == 'true'
 
 # Validate voice cloning requirements on import
 if not USE_VOICE_CLONING:
@@ -59,11 +60,29 @@ if not os.path.exists(TARS_VOICE_SAMPLE):
     print("Please place a TARS voice sample WAV file at this location")
     sys.exit(1)
 
-# Validate RVC model exists (will be checked in voice_cloning.py, but warn here)
-if not os.path.exists(RVC_MODEL_PATH):
-    print(f"WARNING: RVC model not found: {RVC_MODEL_PATH}")
-    print("The app will exit on startup if model is not found.")
-    print("See RVC_SETUP.md for training instructions.")
+# Validate GPT-SoVITS model exists (will be checked in voice_cloning.py, but warn here)
+model_dir = Path(GPTSOVITS_MODEL_DIR)
+onnx_dir = model_dir / 'onnx'
+if GPTSOVITS_USE_ONNX:
+    if not onnx_dir.exists():
+        print(f"WARNING: GPT-SoVITS ONNX models not found: {onnx_dir}")
+        print("The app will exit on startup if models are not found.")
+        print("See GPTSOVITS_SETUP.md for training and export instructions.")
+    else:
+        gpt_model = onnx_dir / ('tars_gpt_int8.onnx' if GPTSOVITS_QUANTIZED else 'tars_gpt_fp32.onnx')
+        vits_model = onnx_dir / ('tars_vits_int8.onnx' if GPTSOVITS_QUANTIZED else 'tars_vits_fp32.onnx')
+        if not gpt_model.exists() or not vits_model.exists():
+            print(f"WARNING: GPT-SoVITS ONNX model files not found")
+            print(f"Expected: {gpt_model} and {vits_model}")
+            print("Run: python scripts/export_onnx.py --model-dir", model_dir)
+else:
+    # Check for PyTorch models
+    s1_models = list(model_dir.glob('**/*s1*.pth')) + list(model_dir.glob('**/*gpt*.pth'))
+    s2_models = list(model_dir.glob('**/*s2*.pth')) + list(model_dir.glob('**/*vits*.pth'))
+    if not s1_models or not s2_models:
+        print(f"WARNING: GPT-SoVITS PyTorch models not found: {model_dir}")
+        print("The app will exit on startup if models are not found.")
+        print("See GPTSOVITS_SETUP.md for training instructions.")
 
 # Create directories if they don't exist
 MODELS_DIR.mkdir(exist_ok=True)

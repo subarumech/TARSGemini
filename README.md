@@ -6,7 +6,7 @@ A cross-platform AI assistant inspired by TARS from Interstellar, featuring spee
 
 - **Speech Recognition**: faster-whisper for accurate, offline speech-to-text
 - **AI Responses**: Google Gemini API integration with streaming
-- **Text-to-Speech**: RealtimeTTS with CosyVoice2 for ultra-low latency (150ms)
+- **Text-to-Speech**: GPT-SoVITS for high-quality custom voice cloning
 - **Personality System**: Adjustable humor (0-100%) and honesty (0-100%) settings
 - **Conversation History**: Optional persistent storage with toggle control
 - **Geometric Animations**: 3D block animations synchronized with speech
@@ -47,6 +47,17 @@ SAVE_HISTORY_DEFAULT=false
 ```
 
 See `SETUP.md` for detailed setup instructions.
+
+## Voice Cloning Setup
+
+To use custom TARS voice:
+
+1. **Prepare training data**: Place `tars_sample.wav` in `voice_samples/`
+2. **Setup GPT-SoVITS**: `python scripts/setup_gptsovits.py`
+3. **Train model**: `python scripts/train_gptsovits.py --audio voice_samples/tars_sample.wav`
+4. **Export ONNX**: `python scripts/export_onnx.py --model-dir models/gptsovits_models/tars_voice`
+
+See `GPTSOVITS_SETUP.md` for detailed training instructions.
 
 ## Usage
 
