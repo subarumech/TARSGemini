@@ -1,0 +1,30 @@
+{
+  "default": {
+    "humor": 75,
+    "honesty": 90,
+    "description": "Default TARS personality - witty but mostly honest"
+  },
+  "presets": {
+    "high_humor": {
+      "humor": 95,
+      "honesty": 85,
+      "description": "Very witty, slightly diplomatic"
+    },
+    "brutal_honesty": {
+      "humor": 60,
+      "honesty": 100,
+      "description": "Maximum honesty, minimal humor"
+    },
+    "diplomatic": {
+      "humor": 50,
+      "honesty": 30,
+      "description": "Very diplomatic, less humorous"
+    },
+    "movie_tars": {
+      "humor": 75,
+      "honesty": 90,
+      "description": "Matches TARS from Interstellar movie"
+    }
+  }
+}
+
