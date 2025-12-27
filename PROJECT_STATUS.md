@@ -80,3 +80,7 @@ All core dependencies are specified in `requirements-windows.txt` and `requireme
 2. Create `.env` file with `GEMINI_API_KEY`
 3. Run: `python main.py`
 
+
+
+
+

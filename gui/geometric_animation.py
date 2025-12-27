@@ -123,3 +123,7 @@ class GeometricAnimationWidget(QWidget):
                 int(rect_size)
             )
 
+
+
+
+

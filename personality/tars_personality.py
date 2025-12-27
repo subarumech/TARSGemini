@@ -87,3 +87,7 @@ class TARSPersonality:
         
         return f"Humor: {h_desc} ({self.humor}%), Honesty: {o_desc} ({self.honesty}%)"
 
+
+
+
+

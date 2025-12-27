@@ -125,3 +125,7 @@ class SpeechToText:
         sd.wait()
         return audio.flatten()
 
+
+
+
+

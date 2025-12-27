@@ -124,3 +124,7 @@ class ControlsPanel(QWidget):
         """Get current honesty setting."""
         return self.honesty_slider.value()
 
+
+
+
+

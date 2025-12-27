@@ -38,3 +38,7 @@ The microphone button is implemented but requires additional setup. Speech recog
 - **Whisper model download**: First run downloads model (~1.5GB on Windows, ~75MB on Pi)
 - **Audio issues**: Check microphone permissions in Windows settings
 
+
+
+
+
